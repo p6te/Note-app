@@ -3,12 +3,19 @@ import { Form, Stack, Row, Col, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 import { NoteData, Tag } from "./App";
+import { v4 as uuidv4 } from "uuid";
 
 type NoteFormProps = {
   onSubmit: (data: NoteData) => void;
+  onAddTag: (tag: Tag) => void;
+  availableTags: Tag[];
 };
 
-const NoteForm: React.FC<NoteFormProps> = ({ onSubmit }: NoteFormProps) => {
+const NoteForm: React.FC<NoteFormProps> = ({
+  onSubmit,
+  onAddTag,
+  availableTags,
+}: NoteFormProps) => {
   const titleRef = useRef<HTMLInputElement>(null);
   const markdownRef = useRef<HTMLTextAreaElement>(null);
 
@@ -39,6 +46,14 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSubmit }: NoteFormProps) => {
               <Form.Label>Tags</Form.Label>
               <CreatableSelect
                 isMulti
+                onCreateOption={(label) => {
+                  const newTag = { id: uuidv4(), label };
+                  onAddTag(newTag);
+                  setSelectedTags((prevTags) => [...prevTags, newTag]);
+                }}
+                options={availableTags?.map((tag) => {
+                  return { label: tag.label, value: tag.id };
+                })}
                 value={selectedTags.map((tag) => {
                   return { label: tag.label, value: tag.id };
                 })}
