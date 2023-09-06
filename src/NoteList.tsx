@@ -1,8 +1,17 @@
-import { Badge, Button, Card, Col, Form, Row, Stack } from "react-bootstrap";
+import {
+  Badge,
+  Button,
+  Card,
+  Col,
+  Form,
+  Modal,
+  Row,
+  Stack,
+} from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { Tag } from "./App";
 import Select from "react-select";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import styles from "./NoteList.module.css";
 
 type SimplifiedNote = {
@@ -14,11 +23,19 @@ type SimplifiedNote = {
 type Props = {
   availableTags: Tag[];
   notes: SimplifiedNote[];
+  deleteTag: (id: string) => void;
+  updateTag: (id: string, label: string) => void;
 };
 
-const NoteList: React.FC<Props> = ({ availableTags, notes }: Props) => {
+const NoteList: React.FC<Props> = ({
+  availableTags,
+  notes,
+  deleteTag,
+  updateTag,
+}: Props) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   const filteredNotes = useMemo(() => {
     return notes.filter((note) => {
@@ -33,6 +50,8 @@ const NoteList: React.FC<Props> = ({ availableTags, notes }: Props) => {
     });
   }, [title, notes, selectedTags]);
 
+  const handleCloseModal = () => setShowModal(false);
+
   return (
     <>
       <Row className="align-items-center mb-4">
@@ -44,7 +63,12 @@ const NoteList: React.FC<Props> = ({ availableTags, notes }: Props) => {
             <Link to="/new">
               <Button variant="primary">Create</Button>
             </Link>
-            <Button variant="outline-secondary">Edit Tags</Button>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowModal(true)}
+            >
+              Edit Tags
+            </Button>
           </Stack>
         </Col>
       </Row>
@@ -93,6 +117,14 @@ const NoteList: React.FC<Props> = ({ availableTags, notes }: Props) => {
           </Col>
         ))}
       </Row>
+
+      <EditTags
+        availableTags={availableTags}
+        showModal={showModal}
+        closeModal={handleCloseModal}
+        deleteTag={deleteTag}
+        updateTag={updateTag}
+      />
     </>
   );
 };
@@ -135,5 +167,56 @@ const NoteCard: React.FC<SimplifiedNote> = ({
         </Stack>
       </Card.Body>
     </Card>
+  );
+};
+
+type EditTagsProps = {
+  availableTags: Tag[];
+  showModal: boolean;
+  closeModal: () => void;
+  deleteTag: (id: string) => void;
+  updateTag: (id: string, label: string) => void;
+};
+
+const EditTags: React.FC<EditTagsProps> = ({
+  availableTags,
+  showModal,
+  closeModal,
+  deleteTag,
+  updateTag,
+}: EditTagsProps) => {
+  return (
+    <Modal show={showModal} onHide={closeModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Edit tags</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Stack gap={2}>
+            {availableTags.map((tag) => {
+              return (
+                <Row key={tag.id}>
+                  <Col>
+                    <Form.Control
+                      type="text"
+                      value={tag.label}
+                      onChange={(e) => updateTag(tag.id, e.target.value)}
+                    />
+                  </Col>
+                  <Col xs="auto">
+                    <Button
+                      variant="outline-danger"
+                      onClick={() => deleteTag(tag.id)}
+                    >
+                      &times;
+                    </Button>
+                  </Col>
+                </Row>
+              );
+            })}
+          </Stack>
+        </Form>
+      </Modal.Body>
+    </Modal>
   );
 };

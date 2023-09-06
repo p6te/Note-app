@@ -4,9 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
 
 type Props = {
-  onDeleteNote: (id: string) => void;
+  onDelete: (id: string) => void;
 };
-const Note: React.FC<Props> = ({ onDeleteNote }: Props) => {
+const Note: React.FC<Props> = ({ onDelete }: Props) => {
   const note = useNote();
   const navigate = useNavigate();
 
@@ -32,7 +32,7 @@ const Note: React.FC<Props> = ({ onDeleteNote }: Props) => {
             </Link>
             <Button
               onClick={() => {
-                onDeleteNote(note.id);
+                onDelete(note.id);
                 navigate("/");
               }}
               variant="outline-danger"
