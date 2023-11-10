@@ -1,15 +1,56 @@
-import { Button, Col, Form, Row, Stack } from "react-bootstrap";
+import {
+  Badge,
+  Button,
+  Card,
+  Col,
+  Form,
+  Modal,
+  Row,
+  Stack,
+} from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { Tag } from "./App";
 import Select from "react-select";
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
+import styles from "./NoteList.module.css";
+
+type SimplifiedNote = {
+  tags: Tag[];
+  title: string;
+  id: string;
+};
 
 type Props = {
   availableTags: Tag[];
+  notes: SimplifiedNote[];
+  deleteTag: (id: string) => void;
+  updateTag: (id: string, label: string) => void;
 };
-const NoteList: React.FC<Props> = ({ availableTags }: Props) => {
+
+const NoteList: React.FC<Props> = ({
+  availableTags,
+  notes,
+  deleteTag,
+  updateTag,
+}: Props) => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [title, setTitle] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  const filteredNotes = useMemo(() => {
+    return notes.filter((note) => {
+      return (
+        (title === "" ||
+          note.title.toLowerCase().includes(title.toLowerCase())) &&
+        (selectedTags.length === 0 ||
+          selectedTags.every((tag) =>
+            note.tags.some((noteTag) => noteTag.id === tag.id)
+          ))
+      );
+    });
+  }, [title, notes, selectedTags]);
+
+  const handleCloseModal = () => setShowModal(false);
 
   return (
     <>
@@ -22,7 +63,12 @@ const NoteList: React.FC<Props> = ({ availableTags }: Props) => {
             <Link to="/new">
               <Button variant="primary">Create</Button>
             </Link>
-            <Button variant="outline-secondary">Edit Tags</Button>
+            <Button
+              variant="outline-secondary"
+              onClick={() => setShowModal(true)}
+            >
+              Edit Tags
+            </Button>
           </Stack>
         </Col>
       </Row>
@@ -64,8 +110,113 @@ const NoteList: React.FC<Props> = ({ availableTags }: Props) => {
           </Col>
         </Row>
       </Form>
+      <Row xs={1} sm={2} lg={3} xl={4} className="g-3">
+        {filteredNotes.map((note) => (
+          <Col key={note.id}>
+            <NoteCard id={note.id} title={note.title} tags={note.tags} />
+          </Col>
+        ))}
+      </Row>
+
+      <EditTags
+        availableTags={availableTags}
+        showModal={showModal}
+        closeModal={handleCloseModal}
+        deleteTag={deleteTag}
+        updateTag={updateTag}
+      />
     </>
   );
 };
 
 export default NoteList;
+
+const NoteCard: React.FC<SimplifiedNote> = ({
+  id,
+  tags,
+  title,
+}: SimplifiedNote) => {
+  return (
+    <Card
+      as={Link}
+      to={`/${id}`}
+      className={`h-100 text-reset text-decoration-none ${styles.card}`}
+    >
+      <Card.Body>
+        <Stack
+          gap={2}
+          className="align-items-center justify-content-center h-100"
+        >
+          <span className="fs-5">{title}</span>
+
+          {tags.length > 0 && (
+            <Stack
+              gap={1}
+              direction="horizontal"
+              className="justify-content-center flex-wrap"
+            >
+              {tags.map((tag) => {
+                return (
+                  <Badge className="text-truncate" key={tag.id}>
+                    {tag.label}
+                  </Badge>
+                );
+              })}
+            </Stack>
+          )}
+        </Stack>
+      </Card.Body>
+    </Card>
+  );
+};
+
+type EditTagsProps = {
+  availableTags: Tag[];
+  showModal: boolean;
+  closeModal: () => void;
+  deleteTag: (id: string) => void;
+  updateTag: (id: string, label: string) => void;
+};
+
+const EditTags: React.FC<EditTagsProps> = ({
+  availableTags,
+  showModal,
+  closeModal,
+  deleteTag,
+  updateTag,
+}: EditTagsProps) => {
+  return (
+    <Modal show={showModal} onHide={closeModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Edit tags</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Stack gap={2}>
+            {availableTags.map((tag) => {
+              return (
+                <Row key={tag.id}>
+                  <Col>
+                    <Form.Control
+                      type="text"
+                      value={tag.label}
+                      onChange={(e) => updateTag(tag.id, e.target.value)}
+                    />
+                  </Col>
+                  <Col xs="auto">
+                    <Button
+                      variant="outline-danger"
+                      onClick={() => deleteTag(tag.id)}
+                    >
+                      &times;
+                    </Button>
+                  </Col>
+                </Row>
+              );
+            })}
+          </Stack>
+        </Form>
+      </Modal.Body>
+    </Modal>
+  );
+};
