@@ -10,9 +10,10 @@ import NoteLayout from "./NoteLayout";
 import Note from "./Note";
 import EditNote from "./EditNote";
 
-export type RawNote = {
+export type Tag = {
   id: string;
-} & RawNoteData;
+  label: string;
+};
 
 export type RawNoteData = {
   title: string;
@@ -20,9 +21,9 @@ export type RawNoteData = {
   tagIds: string[];
 };
 
-export type Note = {
+export type RawNote = {
   id: string;
-} & NoteData;
+} & RawNoteData;
 
 export type NoteData = {
   title: string;
@@ -30,10 +31,9 @@ export type NoteData = {
   tags: Tag[];
 };
 
-export type Tag = {
+export type Note = {
   id: string;
-  label: string;
-};
+} & NoteData;
 
 function App() {
   const [notes, setNotes] = useLocalStorage<RawNote[]>("NOTES", []);
